@@ -22,15 +22,15 @@ let
         config = if arch == "armv6l" || arch == "armv7l" then "${arch}-unknown-linux-musleabi"
                  else "${arch}-unknown-linux-musl";
       };
-    }; in nativePkgs.runCommand "nix-${arch}" {
+    }; emulator = nativePkgs.writeScript "nix" ''
+      ${pkgs.hostPlatform.emulator nativePkgs} ${pkgs.nix}/bin/nix "$@"
+    ''; in nativePkgs.runCommand "nix-${arch}" {
       nativeBuildInputs = [ nativePkgs.haskellPackages.arx ];
-      passthru = {
-        inherit (pkgs) nix;
-        test = nativePkgs.writeScriptBin "nix" ''
-          ${pkgs.hostPlatform.emulator nativePkgs} ${pkgs.nix}/bin/nix "$@"
-        '';
-      };
+      passthru = { inherit (pkgs) nix; inherit emulator; };
     } ''
+      # verify built binaries actually work
+      ${emulator} show-config > /dev/null
+
       cp -r ${pkgs.nix}/share share
       chmod -R 755 share
       rm -rf share/nix/sandbox
