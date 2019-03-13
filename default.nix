@@ -1,4 +1,4 @@
-{ nixpkgsFun ? import (builtins.fetchTarball "https://github.com/matthewbauer/nixpkgs/archive/d65584edcde7c5c4862116b2dbd77862157db061.tar.gz") }:
+{ nixpkgsFun ? import (builtins.fetchTarball "https://github.com/matthewbauer/nixpkgs/archive/static-nix.tar.gz") }:
 
 let
 
