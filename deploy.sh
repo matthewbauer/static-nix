@@ -1,7 +1,6 @@
 #!/usr/bin/env sh
 
 result=$(nix-build)
-
 dir=$(mktemp -d)
 
 setup() {
