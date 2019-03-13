@@ -1,8 +1,14 @@
-{ nixpkgsFun ? import (builtins.fetchTarball "https://github.com/matthewbauer/nixpkgs/archive/static-nix.tar.gz") }:
+{ nixpkgsFun ? import (builtins.fetchTarball "https://github.com/matthewbauer/nixpkgs/archive/static-nix.tar.gz")
+, archs ? [
+  "x86_64"
+  "aarch64"
+  # "armv6l"
+  # "armv7l"
+  # "i686"
+] }:
 
 let
 
-  archs = [ "x86_64" "aarch64" ]; # "armv6l" "armv7l"
   nativePkgs = nixpkgsFun {};
 
   nixes = builtins.listToAttrs (map (arch: {

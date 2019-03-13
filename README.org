@@ -1,0 +1,36 @@
+* Statically-built Nix
+
+** Building
+
+You can build this with Nix using:
+
+#+BEGIN_SRC sh
+nix-build
+#+END_SRC
+
+A statically built Nix binary will be available in =./result/bin/nix=.
+
+You can also build for a specific architecture by passing the cpu name
+like:
+
+#+BEGIN_SRC sh
+nix-build -A aarch64
+#+END_SRC
+
+The resulting binary will be available at =./result/bin/nix-aarch64=.
+Note: only aarch64 and x86_64 are currently supported. Hopefully other
+arm and intel architectures can be added later.
+
+** Prebuilt 
+
+Prebuilt URLs are available here:
+
+- https://matthewbauer.us/nix-aarch64
+- https://matthewbauer.us/nix-x86_64
+
+** Further reading
+
+Some relevant information related to this:
+
+- [[https://matthewbauer.us/blog/static-nix.html][Static Nix]]
+- [[https://matthewbauer.us/blog/beginners-guide-to-cross.html][Beginner’s guide to cross compilation in Nixpkgs]]
