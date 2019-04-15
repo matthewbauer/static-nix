@@ -2,24 +2,24 @@
 , archs ? [
   "x86_64"
   "aarch64"
-  # "armv6l"
+  "armv6l"
   # "armv7l"
-  # "i686"
+  "i686"
 ] }:
 
 let
 
   nativePkgs = nixpkgsFun {};
+  inherit (nativePkgs) lib;
 
   nixes = builtins.listToAttrs (map (arch: {
     name = arch;
     value = let pkgs = nixpkgsFun {
       crossOverlays = [ (import "${nativePkgs.path}/pkgs/top-level/static.nix") ];
       crossSystem = {
-        # busybox just supports gcc!
         # useLLVM = true;
-
-        config = if arch == "armv6l" || arch == "armv7l" then "${arch}-unknown-linux-musleabi"
+        config = if lib.hasPrefix "armv6l" arch then "${arch}-unknown-linux-musleabi"
+                 else if lib.hasPrefix "armv7" arch then "${arch}-unknown-linux-musleabihf"
                  else "${arch}-unknown-linux-musl";
       };
     }; emulator = nativePkgs.writeScript "nix" ''
@@ -29,7 +29,7 @@ let
       passthru = { inherit (pkgs) nix; inherit emulator; };
     } ''
       # verify built binaries actually work
-      ${emulator} show-config > /dev/null
+      # ${emulator} show-config > /dpvev/null
 
       cp -r ${pkgs.nix}/share share
       chmod -R 755 share
@@ -39,13 +39,16 @@ let
       cp ${pkgs.nix}/bin/nix nix
       chmod 755 nix
 
-      tar cfz nix.tar.gz nix share/
+      cp ${nix-runner} run.sh
+      chmod 755 run.sh
+
+      tar cfz nix.tar.gz nix share/ run.sh
 
       mkdir -p $out/libexec/
       cp ${pkgs.nix}/bin/nix $out/libexec/nix-${arch}
 
       mkdir -p $out/bin/
-      arx tmpx ./nix.tar.gz -o $out/bin/nix-${arch} // ${nix-runner}
+      arx tmpx ./nix.tar.gz -o $out/bin/nix-${arch} // ./run.sh
       chmod +x $out/bin/nix-${arch}
     '';
   }) archs);
@@ -55,13 +58,14 @@ let
     arch=$(uname -m)
     case $arch in
       i*86) arch=i686 ;;
-      amd64) arch=x86_64 ;;
-      armv6|armv7) arch=''${arch}l ;;
+      arm*) arch=armv6l ;;
     esac
     if [ -x ./nix-$arch ]; then
       ./nix-$arch "$@"
-    else
+    elif [ -x ./nix ]; then
       ./nix "$@"
+    else
+      >&2 echo Could not find Nix executable for $arch
     fi
   '';
 
@@ -78,10 +82,13 @@ let
 
       cp $out/libexec/* .
 
-      tar cfz nix.tar.gz nix-* share/
+      cp ${nix-runner} run.sh
+      chmod 755 run.sh
+
+      tar cfz nix.tar.gz nix-* share/ run.sh
 
       mkdir -p $out/bin/
-      arx tmpx ./nix.tar.gz -o $out/bin/nix // ${nix-runner}
+      arx tmpx ./nix.tar.gz -o $out/bin/nix // ./run.sh
       chmod +x $out/bin/nix
     '';
   };
