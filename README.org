@@ -18,15 +18,16 @@ nix-build -A aarch64
 #+END_SRC
 
 The resulting binary will be available at =./result/bin/nix-aarch64=.
-Note: only aarch64 and x86_64 are currently supported. Hopefully other
-arm and intel architectures can be added later.
+CPUs currently supported are x86_64, aarch64, armv6l, i686.
 
 ** Prebuilt 
 
 Prebuilt URLs are available here:
 
 - https://matthewbauer.us/nix-aarch64
+- https://matthewbauer.us/nix-armv6l
 - https://matthewbauer.us/nix-x86_64
+- https://matthewbauer.us/nix-i686
 
 ** Further reading
 
