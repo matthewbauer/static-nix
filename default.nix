@@ -29,12 +29,11 @@ let
     }; emulator = nativePkgs.writeScript "nix" ''
       ${pkgs.hostPlatform.emulator nativePkgs} ${pkgs.nix}/bin/nix "$@"
     ''; in nativePkgs.runCommand "nix-${arch}" {
-      nativeBuildInputs = [ nativePkgs.haskellPackages.arx ];
+      nativeBuildInputs = with nativePkgs; [ haskellPackages.arx ];
       passthru = { inherit (pkgs) nix; inherit emulator; };
     # i486 DOES NOT WORK on x86_64 within Nix builder!!!
     # I should open an issue in this case.
     } (lib.optionalString (!(lib.hasPrefix "arm" arch) && arch != "i486") ''
-      # verify built binaries actually work
       ${emulator} show-config | grep 'system = ${arch}'
     '' + ''
       cp -r ${pkgs.nix}/share share
@@ -54,7 +53,7 @@ let
       cp ${pkgs.nix}/bin/nix $out/libexec/nix-${arch}
 
       mkdir -p $out/bin/
-      arx tmpx ./nix.tar.gz -o $out/bin/nix-${arch} // ./run.sh "$@"
+      arx tmpx ./nix.tar.gz -o $out/bin/nix-${arch} // ./run.sh '$@'
       chmod +x $out/bin/nix-${arch}
     '');
   }) archs);
@@ -79,7 +78,7 @@ let
     name = "static-nix";
     paths = builtins.attrValues nixes;
     passthru = nixes;
-    buildInputs = [ nativePkgs.haskellPackages.arx ];
+    buildInputs = with nativePkgs; [ haskellPackages.arx coreutils hexdump ];
     postBuild = ''
       cp -r ${nixes.x86_64.nix}/share share
       chmod -R 755 share
@@ -94,8 +93,11 @@ let
       tar cfz nix.tar.gz nix-x86_64 nix-i686 nix-armv6l nix-aarch64 share/ run.sh
 
       mkdir -p $out/bin/
-      arx tmpx ./nix.tar.gz -o $out/bin/nix // ./run.sh "$@"
+      arx tmpx ./nix.tar.gz -o $out/bin/nix // ./run.sh '$@'
       chmod +x $out/bin/nix
+
+      $out/bin/nix show-config | grep 'system = '
+      cat $out/bin/nix | sh -s show-config | grep 'system = '
     '';
   };
 
