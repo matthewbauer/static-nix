@@ -4,9 +4,9 @@
   "aarch64"
   "armv6l"
   # "armv7l"
-  "armv7a"
+  # "armv7a"
   "powerpc64le"
-  "mipsel"
+  # "mipsel"
   "i686"
   "i486"
 ] }:
@@ -31,9 +31,11 @@ let
     ''; in nativePkgs.runCommand "nix-${arch}" {
       nativeBuildInputs = [ nativePkgs.haskellPackages.arx ];
       passthru = { inherit (pkgs) nix; inherit emulator; };
-    } (lib.optionalString (!(lib.hasPrefix "arm" arch)) ''
+    # i486 DOES NOT WORK on x86_64 within Nix builder!!!
+    # I should open an issue in this case.
+    } (lib.optionalString (!(lib.hasPrefix "arm" arch) && arch != "i486") ''
       # verify built binaries actually work
-      ${emulator} show-config | grep 'system ='
+      ${emulator} show-config | grep 'system = ${arch}'
     '' + ''
       cp -r ${pkgs.nix}/share share
       chmod -R 755 share
