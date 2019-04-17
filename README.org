@@ -28,6 +28,8 @@ Prebuilt URLs are available here:
 - https://matthewbauer.us/nix-armv6l
 - https://matthewbauer.us/nix-x86_64
 - https://matthewbauer.us/nix-i686
+- https://matthewbauer.us/nix-i486
+- https://matthewbauer.us/nix-powerpc64le
 
 ** Further reading
 
