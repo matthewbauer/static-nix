@@ -54,7 +54,7 @@ let
       cp ${pkgs.nix}/bin/nix $out/libexec/nix-${arch}
 
       mkdir -p $out/bin/
-      arx tmpx ./nix.tar.gz -o $out/bin/nix-${arch} // ./run.sh
+      arx tmpx ./nix.tar.gz -o $out/bin/nix-${arch} // ./run.sh "$@"
       chmod +x $out/bin/nix-${arch}
     '');
   }) archs);
@@ -94,7 +94,7 @@ let
       tar cfz nix.tar.gz nix-x86_64 nix-i686 nix-armv6l nix-aarch64 share/ run.sh
 
       mkdir -p $out/bin/
-      arx tmpx ./nix.tar.gz -o $out/bin/nix // ./run.sh
+      arx tmpx ./nix.tar.gz -o $out/bin/nix // ./run.sh "$@"
       chmod +x $out/bin/nix
     '';
   };
