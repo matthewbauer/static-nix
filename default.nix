@@ -4,7 +4,11 @@
   "aarch64"
   "armv6l"
   # "armv7l"
+  "armv7a"
+  "powerpc64le"
+  "mipsel"
   "i686"
+  "i486"
 ] }:
 
 let
@@ -18,7 +22,7 @@ let
       crossOverlays = [ (import "${nativePkgs.path}/pkgs/top-level/static.nix") ];
       crossSystem = {
         # useLLVM = true;
-        config = if lib.hasPrefix "armv6l" arch then "${arch}-unknown-linux-musleabi"
+        config = if lib.hasPrefix "armv6" arch then "${arch}-unknown-linux-musleabi"
                  else if lib.hasPrefix "armv7" arch then "${arch}-unknown-linux-musleabihf"
                  else "${arch}-unknown-linux-musl";
       };
@@ -27,10 +31,10 @@ let
     ''; in nativePkgs.runCommand "nix-${arch}" {
       nativeBuildInputs = [ nativePkgs.haskellPackages.arx ];
       passthru = { inherit (pkgs) nix; inherit emulator; };
-    } ''
+    } (lib.optionalString (!(lib.hasPrefix "arm" arch)) ''
       # verify built binaries actually work
-      # ${emulator} show-config > /dpvev/null
-
+      ${emulator} show-config | grep 'system ='
+    '' + ''
       cp -r ${pkgs.nix}/share share
       chmod -R 755 share
       rm -rf share/nix/sandbox
@@ -50,7 +54,7 @@ let
       mkdir -p $out/bin/
       arx tmpx ./nix.tar.gz -o $out/bin/nix-${arch} // ./run.sh
       chmod +x $out/bin/nix-${arch}
-    '';
+    '');
   }) archs);
 
   nix-runner = nativePkgs.writeScript "nix-runner.sh" ''
@@ -85,7 +89,7 @@ let
       cp ${nix-runner} run.sh
       chmod 755 run.sh
 
-      tar cfz nix.tar.gz nix-* share/ run.sh
+      tar cfz nix.tar.gz nix-x86_64 nix-i686 nix-armv6l nix-aarch64 share/ run.sh
 
       mkdir -p $out/bin/
       arx tmpx ./nix.tar.gz -o $out/bin/nix // ./run.sh

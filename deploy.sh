@@ -18,5 +18,6 @@ trap cleanup EXIT
 
 cp $result/bin/* .
 git add nix-*
+git add nix
 git commit -m "Update Nix binaries"
 git push
