@@ -26,14 +26,14 @@ let
                  else if lib.hasPrefix "armv7" arch then "${arch}-unknown-linux-musleabihf"
                  else "${arch}-unknown-linux-musl";
       };
-    }; emulator = nativePkgs.writeScript "nix" ''
+    }; emulator = nativePkgs.writeScript "nix-${arch}" ''
       ${pkgs.hostPlatform.emulator nativePkgs} ${pkgs.nix}/bin/nix "$@"
     ''; in nativePkgs.runCommand "nix-${arch}" {
       nativeBuildInputs = with nativePkgs; [ haskellPackages.arx hexdump ];
       passthru = { inherit (pkgs) nix; inherit emulator; };
     # i486 DOES NOT WORK on x86_64 within Nix builder!!!
     # I should open an issue in this case.
-    } (lib.optionalString (!(lib.hasPrefix "arm" arch) && arch != "i486") ''
+    } (lib.optionalString (!(lib.elem arch ["i486" "armv6l"])) ''
       ${emulator} show-config | grep 'system = ${arch}'
     '' + ''
       cp -r ${pkgs.nix}/share share
