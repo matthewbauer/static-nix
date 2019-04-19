@@ -29,7 +29,7 @@ let
     }; emulator = nativePkgs.writeScript "nix" ''
       ${pkgs.hostPlatform.emulator nativePkgs} ${pkgs.nix}/bin/nix "$@"
     ''; in nativePkgs.runCommand "nix-${arch}" {
-      nativeBuildInputs = with nativePkgs; [ haskellPackages.arx ];
+      nativeBuildInputs = with nativePkgs; [ haskellPackages.arx hexdump ];
       passthru = { inherit (pkgs) nix; inherit emulator; };
     # i486 DOES NOT WORK on x86_64 within Nix builder!!!
     # I should open an issue in this case.
@@ -44,21 +44,20 @@ let
       cp ${pkgs.nix}/bin/nix nix
       chmod 755 nix
 
-      cp ${nix-runner} run.sh
-      chmod 755 run.sh
-
-      tar cfz nix.tar.gz nix share/ run.sh
+      tar cfz nix.tar.gz nix share/
 
       mkdir -p $out/libexec/
       cp ${pkgs.nix}/bin/nix $out/libexec/nix-${arch}
 
       mkdir -p $out/bin/
-      arx tmpx ./nix.tar.gz -o $out/bin/nix-${arch} // ./run.sh '$@'
+      arx tmpx ./nix.tar.gz -o $out/bin/nix-${arch} // '${nix-runner}'
       chmod +x $out/bin/nix-${arch}
+    '' + lib.optionalString ("${arch}-linux" == builtins.currentSystem) ''
+      $out/bin/nix-${arch} show-config | grep 'system = ${arch}'
     '');
   }) archs);
 
-  nix-runner = nativePkgs.writeScript "nix-runner.sh" ''
+  nix-runner = ''
     export NIX_DATA_DIR=$PWD/share
     arch=$(uname -m)
     case $arch in
@@ -78,7 +77,7 @@ let
     name = "static-nix";
     paths = builtins.attrValues nixes;
     passthru = nixes;
-    buildInputs = with nativePkgs; [ haskellPackages.arx coreutils hexdump ];
+    buildInputs = with nativePkgs; [ haskellPackages.arx hexdump ];
     postBuild = ''
       cp -r ${nixes.x86_64.nix}/share share
       chmod -R 755 share
@@ -87,17 +86,14 @@ let
 
       cp $out/libexec/* .
 
-      cp ${nix-runner} run.sh
-      chmod 755 run.sh
-
-      tar cfz nix.tar.gz nix-x86_64 nix-i686 nix-armv6l nix-aarch64 share/ run.sh
+      tar cfz nix.tar.gz nix-x86_64 nix-i686 nix-armv6l nix-aarch64 share/
 
       mkdir -p $out/bin/
-      arx tmpx ./nix.tar.gz -o $out/bin/nix // ./run.sh '$@'
+      arx tmpx ./nix.tar.gz -o $out/bin/nix // '${nix-runner}'
       chmod +x $out/bin/nix
 
-      $out/bin/nix show-config | grep 'system = '
-      cat $out/bin/nix | sh -s show-config | grep 'system = '
+      $out/bin/nix show-config | grep 'system = ${builtins.currentSystem}'
+      cat $out/bin/nix | sh -s show-config | grep 'system = ${builtins.currentSystem}'
     '';
   };
 
