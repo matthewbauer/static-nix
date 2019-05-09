@@ -15,6 +15,11 @@ let
 
   nativePkgs = nixpkgsFun {};
   inherit (nativePkgs) lib;
+  haskellLib = nativePkgs.haskell.lib;
+
+  arx = haskellLib.overrideCabal nativePkgs.haskellPackages.arx (o: {
+    patches = (o.patches or []) ++ [./arx.patch];
+  });
 
   nixes = builtins.listToAttrs (map (arch: {
     name = arch;
@@ -29,7 +34,7 @@ let
     }; emulator = nativePkgs.writeScript "nix-${arch}" ''
       ${pkgs.hostPlatform.emulator nativePkgs} ${pkgs.nix}/bin/nix "$@"
     ''; in nativePkgs.runCommand "nix-${arch}" {
-      nativeBuildInputs = with nativePkgs; [ haskellPackages.arx hexdump ];
+      nativeBuildInputs = [ arx nativePkgs.hexdump ];
       passthru = { inherit (pkgs) nix; inherit emulator; };
     # i486 DOES NOT WORK on x86_64 within Nix builder!!!
     # I should open an issue in this case.
@@ -65,9 +70,9 @@ let
       arm*) arch=armv6l ;;
     esac
     if [ -x ./nix-$arch ]; then
-      ./nix-$arch "$@"
+      exec -a "$0" ./nix-$arch "$@"
     elif [ -x ./nix ]; then
-      ./nix "$@"
+      exec -a "$0" ./nix "$@"
     else
       >&2 echo Could not find Nix executable for $arch
     fi
@@ -77,7 +82,7 @@ let
     name = "static-nix";
     paths = builtins.attrValues nixes;
     passthru = nixes;
-    buildInputs = with nativePkgs; [ haskellPackages.arx hexdump ];
+    buildInputs = with nativePkgs; [ arx nativePkgs.hexdump ];
     postBuild = ''
       cp -r ${nixes.x86_64.nix}/share share
       chmod -R 755 share
