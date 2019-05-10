@@ -36,9 +36,8 @@ let
     ''; in nativePkgs.runCommand "nix-${arch}" {
       nativeBuildInputs = [ arx nativePkgs.hexdump ];
       passthru = { inherit (pkgs) nix; inherit emulator; };
-    # i486 DOES NOT WORK on x86_64 within Nix builder!!!
-    # I should open an issue in this case.
     } (lib.optionalString (!(lib.elem arch ["i486" "armv6l"])) ''
+      ${emulator} show-config | grep 'system ='
       ${emulator} show-config | grep 'system = ${arch}'
     '' + ''
       cp -r ${pkgs.nix}/share share
