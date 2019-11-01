@@ -24,35 +24,43 @@ let
 
   nixes = builtins.listToAttrs (map (arch: {
     name = arch;
-    value = let pkgs = nixpkgsFun {
-      crossOverlays = [ (import "${nativePkgs.path}/pkgs/top-level/static.nix") ];
-      crossSystem = {
-        # useLLVM = true;
-        config = if lib.hasPrefix "armv6" arch then "${arch}-unknown-linux-musleabi"
-                 else if lib.hasPrefix "armv7" arch then "${arch}-unknown-linux-musleabihf"
-                 else "${arch}-unknown-linux-musl";
+    value = let
+      pkgs = nixpkgsFun {
+        crossOverlays = [ (import "${nativePkgs.path}/pkgs/top-level/static.nix") ];
+        crossSystem = {
+          # useLLVM = true;
+          config = if lib.hasPrefix "armv6" arch then "${arch}-unknown-linux-musleabi"
+                   else if lib.hasPrefix "armv7" arch then "${arch}-unknown-linux-musleabihf"
+                   else "${arch}-unknown-linux-musl";
+        };
       };
-    }; emulator = nativePkgs.writeScript "nix-${arch}" ''
-      ${pkgs.hostPlatform.emulator nativePkgs} ${pkgs.nix}/bin/nix "$@"
-    ''; in nativePkgs.runCommand "nix-${arch}" {
+      nix = pkgs.nix.overrideAttrs (o: {
+        postInstall = o.postInstall or "" + ''
+          $STRIP $out/bin/nix
+        '';
+      });
+      emulator = nativePkgs.writeScript "nix-${arch}" ''
+        ${pkgs.hostPlatform.emulator nativePkgs} ${nix}/bin/nix "$@"
+      ''; in
+    nativePkgs.runCommand "nix-${arch}" {
       nativeBuildInputs = [ arx nativePkgs.hexdump ];
-      passthru = { inherit (pkgs) nix; inherit emulator; };
+      passthru = { inherit nix emulator; };
     } (lib.optionalString (!(lib.elem arch ["i486" "armv6l"])) ''
       ${emulator} show-config | grep 'system ='
       ${emulator} show-config | grep 'system = ${arch}'
     '' + ''
-      cp -r ${pkgs.nix}/share share
+      cp -r ${nix}/share share
       chmod -R 755 share
       rm -rf share/nix/sandbox
       chmod 644 share/nix/corepkgs/*
 
-      cp ${pkgs.nix}/bin/nix nix
+      cp ${nix}/bin/nix nix
       chmod 755 nix
 
       tar cfz nix.tar.gz nix share/
 
       mkdir -p $out/libexec/
-      cp ${pkgs.nix}/bin/nix $out/libexec/nix-${arch}
+      cp ${nix}/bin/nix $out/libexec/nix-${arch}
 
       mkdir -p $out/bin/
       arx tmpx ./nix.tar.gz -o $out/bin/nix-${arch} // '${nix-runner}'
