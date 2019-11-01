@@ -9,7 +9,7 @@
   "powerpc64le"
   # "mipsel"
   "i686"
-  "i486"
+  # "i486"
 ] }:
 
 let
