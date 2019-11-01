@@ -70,6 +70,8 @@ let
     esac
     if [ -x ./nix-$arch ]; then
       exec -a "$0" ./nix-$arch "$@"
+    elif [ -x ./dat/nix-$arch ]; then
+      exec -a "$0" ./dat/nix-$arch "$@"
     elif [ -x ./nix ]; then
       exec -a "$0" ./nix "$@"
     else
