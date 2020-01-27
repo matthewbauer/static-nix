@@ -1,4 +1,4 @@
-{ nixpkgsSrc ? builtins.fetchTarball "https://github.com/matthewbauer/nixpkgs/archive/9a10927a39d65ae0dd552878d1f9c938026219d8.tar.gz"
+{ nixpkgsSrc ? builtins.fetchTarball "https://github.com/matthewbauer/nixpkgs/archive/0f84314c4f6b3ec22dd7aa1402d94215343f9cfc.tar.gz"
 , nixpkgsFun ? import nixpkgsSrc
 , archs ? [
   "x86_64"
